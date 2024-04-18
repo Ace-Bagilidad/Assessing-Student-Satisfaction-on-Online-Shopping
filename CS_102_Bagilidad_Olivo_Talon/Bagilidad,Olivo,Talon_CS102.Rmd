@@ -11,7 +11,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ------------------------------------------------------------------------
 
-# Load CSV Data
+# Assessing Student Satisfaction in Online Shopping
+
+------------------------------------------------------------------------
+
+#### Load CSV Data
 
 ```{r}
 #install.packages("readr")
@@ -20,12 +24,59 @@ library(readr)
 library(dplyr)
 
 student_satisfaction <- read.csv("student_satisfaction.csv")
+
+str(student_satisfaction)
+summary(student_satisfaction)
 ```
 
-# Change Blank Cells to NA
+#### Remove Useless Rows
+
+```{r}
+
+student_satisfaction <- student_satisfaction %>%
+  filter(prefered_platform != "None")
+
+```
+
+#### Question Columns
+
+```{r}
+
+question_columns <- c("U6", "RA1", "RA5", "OE7", "EOU3", "EOUS", "EOU6", "EU4", "A1", "AF1", "AF2", "Affect1", "SN1", "SN2", "SF2", "SF4", "PBC2", "PBC3", "PBC5", "FC3", "SE1", "SE4", "SE6", "SE7", "ANX1", "ANX2", "ANX3", "ANX4", "BI1", "BI2", "BI3")
+
+```
+
+#### Change Columns to a Factor
+
+```{r}
+
+# Change questions column to factor
+for (column_name in question_columns) {
+  student_satisfaction[[column_name]] <- factor(student_satisfaction[[column_name]],
+                              levels = c("Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"),
+                              ordered = TRUE)
+}
+
+# Change preferred platform column to factor
+student_satisfaction$prefered_platform <- factor(student_satisfaction$prefered_platform, 
+                                     levels = c("Shopee", "Lazada", "TikTok", "Shein"))
+
+# Change online_shopping_freq column to factor
+student_satisfaction$online_shopping_freq <- factor(student_satisfaction$online_shopping_freq, 
+                               levels = c("Rarely", "Occasionally", "Monthly", "Weekly", "Daily"))
+
+```
+
+#### Change Blank Cells to NA
 
 ```{r}
 
 student_satisfaction <- student_satisfaction %>% 
   mutate_all(na_if, "")
+```
+
+```{r}
+
+View(student_satisfaction)
+
 ```
