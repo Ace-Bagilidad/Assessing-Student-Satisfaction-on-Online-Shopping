@@ -9,11 +9,23 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Loading of csv
+------------------------------------------------------------------------
+
+# Load CSV Data
+
 ```{r}
-library(readxl)
-data <- read_excel("student-satisfaction.xlsx")
-View(data)
+#install.packages("readr")
+#install.packages("dplyr")
+library(readr)
+library(dplyr)
+
+student_satisfaction <- read.csv("student_satisfaction.csv")
 ```
 
-f
+# Change Blank Cells to NA
+
+```{r}
+
+student_satisfaction <- student_satisfaction %>% 
+  mutate_all(na_if, "")
+```
