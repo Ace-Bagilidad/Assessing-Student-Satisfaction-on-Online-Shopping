@@ -1,0 +1,19 @@
+---
+title: "Assessing Student Satisfaction"
+author: "Bagilidad, Olivo, Talon"
+date: "2024-04-18"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Loading of csv
+```{r}
+library(readxl)
+data <- read_excel("student-satisfaction.xlsx")
+View(data)
+```
+
+f
