@@ -171,6 +171,11 @@ demographics$gender[!(demographics$gender %in% c("male", "female"))] <- "other"
 
 # age
 demographics$age <- as.numeric(demographics$age) 
+demographics <- demographics[!is.na(demographics$age) & demographics$age < 24, ] 
+age_bins <- c(14, 18, 24)
+labels <- c("14-18", "19-24")
+demographics$age_group <- cut(demographics$age, breaks = age_bins, labels = labels, right = FALSE)
+
 
 # grade level
 demographics$grade_level <- gsub("senior", "", demographics$grade_level) 
@@ -213,10 +218,10 @@ determinant_plot
 ### Visualization for Demographics
 ```{r}
 cleaned_demographics <- read_csv("cleaned-demographics.csv")
-View(cleaned_demographics)
+
 #Online shopping frequency by age group
 ageShoppingFreq_plot <- 
-  ggplot(demographics, aes(x = age, fill = online_shopping_freq)) +
+  ggplot(cleaned_demographics, aes(x = age, fill = online_shopping_freq)) +
   geom_bar(position = "fill") +
   labs(title = "Online Shopping Frequency by Age Group",
        x = "Age Group",
@@ -226,19 +231,14 @@ ageShoppingFreq_plot
 
 
 
-
-# Define age group bins
-age_bins <- c(14, 18, 24, 30)
-
-# Create age groups
-demographics$age_group <- cut(demographics$age, breaks = age_bins, labels = c("14-18", "19-24", "25-30"))
-
 # Bar plot for online shopping frequency by age group
-ggplot(demographics, aes(x = age_group, fill = online_shopping_frequency)) +
+ageShoppingFreq_plot <- ggplot(cleaned_demographics, aes(x = age_group, fill = online_shopping_freq)) +
   geom_bar(position = "fill") +
   labs(title = "Online Shopping Frequency by Age Group",
        x = "Age Group",
        y = "Proportion",
        fill = "Online Shopping Frequency")
+
+ageShoppingFreq_plot 
 
 ```
