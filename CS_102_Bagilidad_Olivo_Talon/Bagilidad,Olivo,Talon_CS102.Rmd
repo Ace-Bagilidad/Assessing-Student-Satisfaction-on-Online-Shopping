@@ -138,6 +138,7 @@ determinant_summary <- determinants_means %>%
   inner_join(category_df, by = "question")
 
 determinant_summary
+
 ```
 
 #### Get mean and sd by category
@@ -152,13 +153,13 @@ determinant_summary_by_category <- determinant_mean_by_category %>%
 
 determinant_summary_by_category
 
-write.csv(determinant_summary_by_category, "determinant_mean_sd.csv")
+#write.csv(determinant_summary_by_category, "determinant_mean_sd.csv")
 ```
 
 #### Clean Demographics
 
 ```{r}
-
+library(dplyr)
 demographics <- demographics %>%
   select(-Timestamp, -name, -contact, -address)
 
@@ -188,5 +189,56 @@ demographics$online_shopping_freq <- factor(demographics$online_shopping_freq,
 str(demographics)
 
 
-write.csv(demographics, "cleaned-demographics.csv")
+#write.csv(demographics, "cleaned-demographics.csv")
+
+```
+
+### Visualization for determinants 
+```{r}
+determinant_mean_sd <- read_csv("determinant_mean_sd.csv")
+
+determinant_plot <- ggplot(determinant_mean_sd,aes(x=category, y=mean))+
+                    geom_bar(stat='identity', fill='beige')+
+                    geom_errorbar(aes(ymin = mean-sd, ymax = mean+sd),width=0.4,position=position_dodge(0.9))+
+                    labs(title = "Mean with Standard Deviation",
+                    x = "Category",
+                    y = "Mean") +
+                    theme(plot.title = element_text(hjust = 0.5),
+                    axis.text.x = element_text(angle = 45, hjust = 1))
+determinant_plot
+
+
+```
+
+### Visualization for Demographics
+```{r}
+cleaned_demographics <- read_csv("cleaned-demographics.csv")
+View(cleaned_demographics)
+#Online shopping frequency by age group
+ageShoppingFreq_plot <- 
+  ggplot(demographics, aes(x = age, fill = online_shopping_freq)) +
+  geom_bar(position = "fill") +
+  labs(title = "Online Shopping Frequency by Age Group",
+       x = "Age Group",
+       y = "Proportion",
+       fill = "Online Shopping Frequency")
+ageShoppingFreq_plot
+
+
+
+
+# Define age group bins
+age_bins <- c(14, 18, 24, 30)
+
+# Create age groups
+demographics$age_group <- cut(demographics$age, breaks = age_bins, labels = c("14-18", "19-24", "25-30"))
+
+# Bar plot for online shopping frequency by age group
+ggplot(demographics, aes(x = age_group, fill = online_shopping_frequency)) +
+  geom_bar(position = "fill") +
+  labs(title = "Online Shopping Frequency by Age Group",
+       x = "Age Group",
+       y = "Proportion",
+       fill = "Online Shopping Frequency")
+
 ```
