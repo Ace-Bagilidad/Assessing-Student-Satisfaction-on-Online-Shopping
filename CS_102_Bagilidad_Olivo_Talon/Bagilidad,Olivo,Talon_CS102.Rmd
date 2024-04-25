@@ -20,8 +20,15 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 #install.packages("readr")
 #install.packages("dplyr")
+#install.packages("ggplot2")
+#install.packages("tidyr")
+#install.packages("stringr")
 library(readr)
 library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(stringr)
+
 
 student_satisfaction <- read.csv("student_satisfaction.csv")
 
@@ -46,6 +53,15 @@ question_columns <- c("U6", "RA1", "RA5", "OE7", "EOU3", "EOUS", "EOU6", "EU4", 
 
 ```
 
+#### Change Blank Cells to NA
+
+```{r}
+
+student_satisfaction <- student_satisfaction %>% 
+  mutate_all(na_if, "")
+
+```
+
 #### Change Columns to a Factor
 
 ```{r}
@@ -67,16 +83,110 @@ student_satisfaction$online_shopping_freq <- factor(student_satisfaction$online_
 
 ```
 
-#### Change Blank Cells to NA
+
+#### Separate demographic, shopping behavior, and determinant columns
 
 ```{r}
 
-student_satisfaction <- student_satisfaction %>% 
-  mutate_all(na_if, "")
+demographic_cols <- c("Timestamp", "name", "age", "gender", "grade_level", "address", "contact", "prefered_platform", "online_shopping_freq")
+demographics <- student_satisfaction %>% 
+  select(all_of(demographic_cols))
+
+determinant_cols <- setdiff(names(student_satisfaction), demographic_cols)
+determinants <- student_satisfaction %>% 
+  select(all_of(determinant_cols))
+
+
 ```
 
+#### Category Map 
+
 ```{r}
 
-View(student_satisfaction)
+category_map <- list(
+  "Performance Expectancy" = c("U6", "RA1", "RA5", "OE7"),
+  "Effort Expectancy" = c("EOU3", "EOUS", "EOU6", "EU4"),
+  "Attitude toward using technology" = c("A1", "AF1", "AF2", "Affect1"),
+  "Social influence" = c("SN1", "SN2", "SF2", "SF4"),
+  "Facilitating Conditions" = c("PBC2", "PBC3", "PBC5", "FC3"),
+  "Self-Efficacy" = c("SE1", "SE4", "SE6", "SE7"),
+  "Anxiety" = c("ANX1", "ANX2", "ANX3", "ANX4"),
+  "Behavioral Intention to Use the System" = c("BI1", "BI2", "BI3")
+)
+category_df <- stack(category_map)
+colnames(category_df) <- c("question", "category")
 
+```
+
+#### Converting Determinants to numeric then mean and standard deviation and joining with category map
+
+```{r}
+
+determinants_means <- determinants %>%
+  mutate(across(everything(), as.numeric)) %>%
+  summarise_all(.funs = mean) %>% 
+  pivot_longer(cols = everything(), names_to = "question", values_to = "mean")
+
+determinants_sds <- determinants %>%
+  mutate(across(everything(), as.numeric)) %>%
+  summarise_all(.funs = sd) %>% 
+  pivot_longer(cols = everything(), names_to = "question", values_to = "sd")
+
+
+determinant_summary <- determinants_means %>%
+  inner_join(determinants_sds, by = "question") %>%
+  inner_join(category_df, by = "question")
+
+determinant_summary
+```
+
+#### Get mean and sd by category
+
+```{r}
+
+determinant_mean_by_category <- aggregate(mean ~ category, determinant_summary, mean)
+determinant_sd_by_category <- aggregate(sd ~ category, determinant_summary, sd)
+
+determinant_summary_by_category <- determinant_mean_by_category %>%
+  inner_join(determinant_sd_by_category, by= "category")
+
+determinant_summary_by_category
+
+write.csv(determinant_summary_by_category, "determinant_mean_sd.csv")
+```
+
+#### Clean Demographics
+
+```{r}
+
+demographics <- demographics %>%
+  select(-Timestamp, -name, -contact, -address)
+
+demographics <- demographics %>%
+  mutate_all(tolower)
+
+# gender
+demographics$gender[!(demographics$gender %in% c("male", "female"))] <- "other"
+
+# age
+demographics$age <- as.numeric(demographics$age) 
+
+# grade level
+demographics$grade_level <- gsub("senior", "", demographics$grade_level) 
+demographics$grade_level <- str_trim(demographics$grade_level)
+
+
+# convert to factor
+demographics$gender <- as.factor(demographics$gender)
+demographics$grade_level <- as.factor(demographics$grade_level)
+demographics$prefered_platform <- as.factor(demographics$prefered_platform)
+demographics$online_shopping_freq <- factor(demographics$online_shopping_freq, 
+                           levels = c("rarely", "occasionally", "monthly", "weekly", "daily"), 
+                           ordered = TRUE)
+
+
+str(demographics)
+
+
+write.csv(demographics, "cleaned-demographics.csv")
 ```
