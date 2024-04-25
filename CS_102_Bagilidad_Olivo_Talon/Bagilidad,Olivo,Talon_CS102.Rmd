@@ -30,7 +30,7 @@ library(tidyr)
 library(stringr)
 
 
-student_satisfaction <- read.csv("student_satisfaction.csv")
+student_satisfaction <- read_csv("CSV Folder/student_satisfaction.csv")
 
 str(student_satisfaction)
 summary(student_satisfaction)
@@ -171,6 +171,11 @@ demographics$gender[!(demographics$gender %in% c("male", "female"))] <- "other"
 
 # age
 demographics$age <- as.numeric(demographics$age) 
+demographics <- demographics[!is.na(demographics$age) & demographics$age < 24, ] 
+age_bins <- c(14, 18, 24)
+labels <- c("14-18", "19-24")
+demographics$age_group <- cut(demographics$age, breaks = age_bins, labels = labels, right = FALSE)
+
 
 # grade level
 demographics$grade_level <- gsub("senior", "", demographics$grade_level) 
@@ -195,7 +200,7 @@ str(demographics)
 
 ### Visualization for determinants 
 ```{r}
-determinant_mean_sd <- read_csv("determinant_mean_sd.csv")
+determinant_mean_sd <- read_csv("CSV Folder/determinant_mean_sd.csv")
 
 determinant_plot <- ggplot(determinant_mean_sd,aes(x=category, y=mean))+
                     geom_bar(stat='identity', fill='beige')+
@@ -205,14 +210,72 @@ determinant_plot <- ggplot(determinant_mean_sd,aes(x=category, y=mean))+
                     y = "Mean") +
                     theme(plot.title = element_text(hjust = 0.5),
                     axis.text.x = element_text(angle = 45, hjust = 1))
+
+#ggsave("/cloud/project/CS_102_Bagilidad_Olivo_Talon/Determinants_Plot.png", determinant_plot , width = 10, height = 6)
+
 determinant_plot
 
-
+ 
 ```
-
+ The graph show strong favorable attitudes and intentions of students to use online shopping, as evidenced by high scores and minimal variability in performance expectancy, effort expectancy, and behavioral intention. However, there is some variation in self-efficacy, anxiety, and attitudes, indicating that there may be issues with using online shopping.
+ 
+ 
+ 
 ### Visualization for Demographics
+### Online Shopping Frequency by Age Group  
 ```{r}
-cleaned_demographics <- read_csv("cleaned-demographics.csv")
+cleaned_demographics <- read_csv("CSV Folder/cleaned-demographics.csv")
 
+
+#Online shopping frequency by age group
+ageShoppingFreq_plot <- 
+  ggplot(cleaned_demographics, aes(x = age, fill = online_shopping_freq)) +
+  geom_bar(position = "fill") +
+  labs(title = "Online Shopping Frequency by Age Group",
+       x = "Age Group",
+       y = "Proportion",
+       fill = "Online Shopping Frequency")
+ageShoppingFreq_plot
+
+
+
+# Bar plot for online shopping frequency by age group
+ageShoppingFreq_plot <- ggplot(cleaned_demographics, aes(x = age_group, fill = online_shopping_freq)) +
+  geom_bar(position = "fill") +
+  labs(title = "Online Shopping Frequency by Age Group",
+       x = "Age Group",
+       y = "Proportion",
+       fill = "Online Shopping Frequency")
+
+#ggsave("/cloud/project/CS_102_Bagilidad_Olivo_Talon/OnlineShoppingFrequency_Plot.png", ageShoppingFreq_plot , width = 10, height = 6)
+
+ageShoppingFreq_plot 
+
+#When compared to other age groups, those aged 14 to 18 are the most active in online shopping.
 
 ```
+
+
+
+
+### Most Used Online Shopping Platform by Students
+```{r}
+
+platform_colors <- c("#E32E30", "#000000", "#FF6600", "#FF0066")
+
+# Create the plot with custom colors
+popularPlatform_plot <- 
+  ggplot(cleaned_demographics, aes(x = prefered_platform, fill = prefered_platform)) +
+  geom_bar() +
+  labs(title = "Most Preferred Online Shopping Platform by Students",
+       x = "Online Shopping Platforms",
+       y = "Student Count") +
+  scale_fill_manual(values = platform_colors)
+
+#ggsave("/cloud/project/CS_102_Bagilidad_Olivo_Talon/PopularPlatform_Plot.png", popularPlatform_plot, width = 10, height = 6)
+
+  popularPlatform_plot
+
+#The most popular online shopping platform among students is Shopee.
+```
+
